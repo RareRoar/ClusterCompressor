@@ -1,0 +1,6 @@
+App.config
+ClusterCompressor.csproj
+ClusterCompressor.sln
+.vs/
+bin/
+obj/
