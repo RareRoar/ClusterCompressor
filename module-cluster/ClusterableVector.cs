@@ -44,6 +44,10 @@ namespace KMeansPP
 
         public int Dimension { get => valueSequence_.Length; }
 
+        public int X => throw new NotImplementedException();
+
+        public int Y => throw new NotImplementedException();
+
         public void UpdateCoordinates(IEnumerable<double> valueCollection)
         {
             valueSequence_ = valueCollection.ToArray();

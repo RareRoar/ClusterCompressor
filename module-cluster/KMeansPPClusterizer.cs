@@ -152,7 +152,9 @@ namespace KMeansPP
             {
                 accumulator += distancesToClosestCentroid[newCentroidIndex++];
             }
-            newCentroidIndex--;
+            if (newCentroidIndex > 0)
+                newCentroidIndex--;
+            
 
             Parallel.ForEach(vectors_, vector => 
             {
@@ -238,11 +240,29 @@ namespace KMeansPP
         //perform algorithms iterations and return true is it has converged
         private bool DefineClusters()
         {
+            double lastResidual = 0.0;
             for (int i = 0; i < maxIterations_; i++)
             {
-                
+
+                //Console.WriteLine(i.ToString() + ")");
                 double residual = UpdateCentroids();
 
+                //Console.WriteLine(residual);
+                if (i == 0)
+                {
+                    lastResidual = residual;
+                }
+                else
+                {
+                    if (lastResidual == residual && lastResidual < 10)
+                    {
+                        //residual = 0;
+                    }
+                    else
+                    {
+                        lastResidual = residual;
+                    }
+                }
                 if (residual == 0.0)
                 {
                     UpdateClusters();
@@ -255,6 +275,7 @@ namespace KMeansPP
         //return dictionary of (cluster centroid, cluster vectors) pairs
         public Dictionary<IVector, List<IVector>> GetClusters()
         {
+            Console.WriteLine("Starting");
             if (DefineClusters())
             {
                 var clusterDict = new Dictionary<IVector, List<IVector>>();
