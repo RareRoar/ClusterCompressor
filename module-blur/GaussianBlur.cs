@@ -41,6 +41,9 @@ namespace GaussianBlur
         {
             int width = srcImage.Width;
             int height = srcImage.Height;
+
+            Console.WriteLine(width);
+            Console.WriteLine(height);
             BitmapData srcData = srcImage.LockBits(new Rectangle(0, 0, width, height),
                 ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
             int bytes = srcData.Stride * srcData.Height;
@@ -55,7 +58,7 @@ namespace GaussianBlur
             Bitmap resultImage = new Bitmap(width, height);
             BitmapData resultData = resultImage.LockBits(new Rectangle(0, 0, width, height),
                 ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-            Marshal.Copy(bytes, 0, resultData.Scan0, width * height);
+            Marshal.Copy(bytes, 0, resultData.Scan0, bytes.Length);
             resultImage.UnlockBits(resultData);
             return resultImage;
         }

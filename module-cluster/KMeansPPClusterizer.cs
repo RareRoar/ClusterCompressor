@@ -275,7 +275,7 @@ namespace KMeansPP
         //return dictionary of (cluster centroid, cluster vectors) pairs
         public Dictionary<IVector, List<IVector>> GetClusters()
         {
-            Console.WriteLine("Starting");
+            //Console.WriteLine("Starting");
             if (DefineClusters())
             {
                 var clusterDict = new Dictionary<IVector, List<IVector>>();
