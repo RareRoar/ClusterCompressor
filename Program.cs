@@ -116,11 +116,12 @@ namespace ClusterCompressor
             //}
 
             byte[] data = GaussianBlurer.BitmapToByteArray(bitmap);
-            byte[] compressed = RLEncoder.compress(data); //BWCompression.Compress(data);
-            byte[] decompressed = RLEncoder.decompress(compressed);//BWCompression.Decompress(compressed);
+            byte[] compressed = AltCompress(data);//RLEncoder.compress(data); //BWCompression.Compress(data);
+            byte[] decompressed = AltDecompress(compressed);//RLEncoder.decompress(compressed);//BWCompression.Decompress(compressed);
             bitmap = GaussianBlurer.ByteArrayToBitmap(decompressed, width, height);
-            
-            
+            Console.WriteLine(data.Length);
+            Console.WriteLine(decompressed.Length);
+
             //pictureBox.Image = GaussianBlurer.Convolve(bitmap, GaussianBlurer.ApplyGaussianBlur(20, 20));
             //SwiftBlur sb = new SwiftBlur(bitmap);
             //pictureBox.Image = sb.Process(1);
@@ -130,6 +131,140 @@ namespace ClusterCompressor
             form.Controls.Add(pictureBox);
             pictureBox.Location = new Point(0, 0);
             Application.Run(form);
+        }
+
+
+        public static byte[] AltCompress(byte[] data)
+        {
+            byte[] result = new byte[data.Length];
+            byte[] dict = new byte[0xFFFF+1];
+            int offset = 0;
+            result[0] = data[0];
+            result[1] = data[1];
+            int currentByte = 2;
+            for (int i = 2; i < data.Length; i++)
+            {
+                if (dict[(data[i-2] << 8) + data[i - 1]] == data[i])
+                {
+                    result[currentByte] = (byte)(result[currentByte] | (0x01 << (8 - offset)));
+                    offset++;
+                    if (offset == 8)
+                    {
+                        offset = 0;
+                        currentByte++;
+                    }
+                }
+                else
+                {
+                    //result[currentByte] = (byte)(result[currentByte] & (0x00 << (8 - offset))); 
+                    offset++;
+                    if (offset == 8)
+                    {
+                        offset = 0;
+                        currentByte++;
+                    }
+                    dict[(data[i - 2] << 8) + data[i - 1]] = data[i];
+                    result[currentByte] = (byte)(result[currentByte] & (data[i] >> offset));
+                    currentByte++;
+                    result[currentByte] = (byte)(result[currentByte] & (data[i] << (8 - offset)));
+                }
+            }
+            byte[] temp = new byte[currentByte + 1];
+            for (int i = 0; i < temp.Length; i++)
+            {
+                temp[i] = result[i];
+            }
+            Console.WriteLine("done");
+            return temp;
+        }
+
+        public static byte[] AltDecompress(byte[] data)
+        {
+            var result = new List<byte>();
+            byte[] dict = new byte[0xFFFF + 1];
+            int offset = 0;
+            result.Add(data[0]);
+            result.Add(data[1]);
+            int currentByte = 2;
+            while (currentByte < data.Length)
+            {
+                int codeBit = (data[currentByte] >> (7 - offset)) % 2;
+                if (codeBit == 1)
+                {
+                    int t = result[result.Count - 2];
+                    t <<= 8;
+                    t += result[result.Count - 1];
+                    result.Add(dict[t]);
+                   // Console.WriteLine(result.Count.ToString() + ") 1added, cuurent" + currentByte.ToString());
+                    offset++;
+                    if (offset == 8)
+                    {
+                        offset = 0;
+                        currentByte++;
+                        //Console.WriteLine("boom");
+                    }
+                }
+                else
+                {
+                    offset++;
+                    if (offset == 8)
+                    {
+                        offset = 0;
+                        currentByte++;
+                       // Console.WriteLine("boom");
+                    }
+
+                    int leftMask = 0b1;
+                    if (8-offset == 0)
+                    {
+                        leftMask = 0;
+                    }
+                    else
+                    {
+                        for (int j = 0; j < 8-offset; j++)
+                        {
+                            leftMask <<= 1;
+                            leftMask++;
+                        }
+                    }
+                    int rightMask = 0b1;
+                    for (int j = 0; j < offset; j++)
+                    {
+                        rightMask <<= 1;
+                        rightMask++;
+                    }
+                    rightMask <<= (8 - offset);
+                    if (currentByte < data.Length - 1)
+                    {
+                        result.Add((byte)(((data[currentByte] & leftMask) << 8) + (data[currentByte + 1] & rightMask)));
+                        int t = result[result.Count - 2];
+                        t <<= 8;
+                        t += result[result.Count - 1];
+                        dict[t] = result[result.Count-1];
+                    }
+                    else
+                    {
+                        if (currentByte < data.Length)
+                        {
+                            result.Add((byte)(((data[currentByte] & leftMask) << 8)));
+                            int t = result[result.Count - 2];
+                            t <<= 8;
+                            t += result[result.Count - 1];
+                            dict[t] = result[result.Count-1];
+                        }
+                    }
+
+
+                    //Console.WriteLine(result.Count.ToString() + ") 0added, cuurent" + currentByte.ToString());
+                    currentByte++;
+
+                }           
+
+
+
+            }
+            Console.WriteLine("undone");
+            return result.ToArray();
         }
     }
 }
