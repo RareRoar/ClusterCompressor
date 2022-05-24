@@ -37,31 +37,6 @@ namespace GaussianBlur
             return kernel;
         }
 
-        public static byte[] BitmapToByteArray(Bitmap srcImage)
-        {
-            int width = srcImage.Width;
-            int height = srcImage.Height;
-
-            Console.WriteLine(width);
-            Console.WriteLine(height);
-            BitmapData srcData = srcImage.LockBits(new Rectangle(0, 0, width, height),
-                ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
-            int bytes = srcData.Stride * srcData.Height;
-            byte[] buffer = new byte[bytes];
-            Marshal.Copy(srcData.Scan0, buffer, 0, bytes);
-            srcImage.UnlockBits(srcData);
-            return buffer;
-        }
-
-        public static Bitmap ByteArrayToBitmap(byte[] bytes, int width, int height)
-        {
-            Bitmap resultImage = new Bitmap(width, height);
-            BitmapData resultData = resultImage.LockBits(new Rectangle(0, 0, width, height),
-                ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-            Marshal.Copy(bytes, 0, resultData.Scan0, bytes.Length);
-            resultImage.UnlockBits(resultData);
-            return resultImage;
-        }
 
         public static Bitmap Convolve(Bitmap srcImage, double[,] kernel)
         {
@@ -124,7 +99,5 @@ namespace GaussianBlur
             resultImage.UnlockBits(resultData);
             return resultImage;
         }
-
-
     }
 }
